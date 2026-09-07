@@ -1,56 +1,18 @@
-name: Build Zed Audio APK
+- name: Set up JDK 17
+  uses: actions/setup-java@v6
+  with:
+    distribution: temurin
+    java-version: '17'
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+- name: Set up Android SDK
+  uses: android-actions/setup-android@v3
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+- name: Install Android SDK 37
+  run: |
+    yes | sdkmanager --licenses > /dev/null || true
+    sdkmanager "platforms;android-37"
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Install Android SDK 37
-        run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-37"
-
-      - name: Extract Zed Audio project
-        run: |
-          mkdir -p project
-          unzip -q ZedAudioPlayer_V1_source.zip -d project
-
-      - name: Find project root
-        run: |
-          PROJECT_ROOT="$(dirname "$(find project -name settings.gradle -o -name settings.gradle.kts | head -n 1)")"
-          echo "PROJECT_ROOT=$PROJECT_ROOT" >> "$GITHUB_ENV"
-          echo "Project root: $PROJECT_ROOT"
-
-      - name: Make Gradle executable
-        run: |
-          chmod +x "$PROJECT_ROOT/gradlew"
-
-      - name: Build APK
-        run: |
-          cd "$PROJECT_ROOT"
-          ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: Prepare APK
-        run: |
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/debug/*.apk ./zed-audio.apk
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Zed-Audio-debug
-          path: zed-audio.apk
+- name: Extract Zed Audio project
+  run: |
+    mkdir -p project
+    unzip -q ZedAudioPlayer_V1_source.zip -d project
